@@ -14,7 +14,7 @@ class CRM_Businesslink_Upgrader extends CRM_Businesslink_Upgrader_Base {
   public function install() {
     $optionValueParams = array(
       'option_group_id' => 'activity_type',
-      'name' => 'request_business_programme',
+      'name' => 'Request Business Programme',
       'label' => 'Request Business Programme',
       'is_active' => 1,
       'is_reserved' => 1,

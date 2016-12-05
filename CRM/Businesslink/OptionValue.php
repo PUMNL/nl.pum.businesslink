@@ -1,10 +1,11 @@
 <?php
 
 /**
- * Created by PhpStorm.
- * User: erik
- * Date: 5-12-16
- * Time: 10:10
+ * Class for Business Link Option Value processing
+ *
+ * @author Erik Hommel (CiviCooP)
+ * @date 5 Dec 2016
+ * @license AGPL-3.0
  */
 class CRM_Businesslink_OptionValue {
 
@@ -60,5 +61,4 @@ class CRM_Businesslink_OptionValue {
       unset($params['return']);
     }
   }
-
 }

@@ -3,6 +3,15 @@
 require_once 'businesslink.civix.php';
 
 /**
+ * Implements hook_civicrm_buildForm().
+ *
+ * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_buildForm
+ */
+function businesslink_civicrm_buildForm($formName, &$form) {
+  CRM_Businesslink_BusinessLink::buildForm($formName, $form);
+}
+
+/**
  * Implements hook_civicrm_config().
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_config

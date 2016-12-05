@@ -1,10 +1,11 @@
 <?php
 
 /**
- * Created by PhpStorm.
- * User: erik
- * Date: 5-12-16
- * Time: 10:36
+ * Class for Business Link helper functions
+ *
+ * @author Erik Hommel (CiviCooP)
+ * @date 5 Dec 2016
+ * @license AGPL-3.0
  */
 class CRM_Businesslink_Utils {
 
