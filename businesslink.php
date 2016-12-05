@@ -3,15 +3,6 @@
 require_once 'businesslink.civix.php';
 
 /**
- * Implements hook_civicrm_validateForm().
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_validateForm
- */
-function businesslink_civicrm_validateForm($formName, &$fields, &$files, &$form, &$errors) {
-  CRM_Businesslink_BusinessLink::validateForm( $formName, $fields, $files, $form, $errors);
-}
-
-/**
  * Implements hook_civicrm_buildForm().
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_buildForm

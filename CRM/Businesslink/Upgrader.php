@@ -12,6 +12,39 @@ class CRM_Businesslink_Upgrader extends CRM_Businesslink_Upgrader_Base {
    * Method to run on install, creating activity types and relationships
    */
   public function install() {
+    $this->createOptionValues();
+    $this->createRelationshipTypes();
+  }
+
+  /**
+   * Method to run on enable, creating activity types and relationships
+   */
+  public function enable() {
+    $this->createOptionValues();
+    $this->createRelationshipTypes();
+  }
+
+  /**
+   * Method to create required relationship types
+   */
+  private function createRelationshipTypes() {
+    $relationshipTypeParams = array(
+      'contact_type_a' => 'Organization',
+      'contact_sub_type_a' => 'Customer',
+      'contact_type_b' => 'Organization',
+      'name_a_b' => 'has_visited',
+      'label_a_b' => 'Has Visited',
+      'name_b_a' => 'visited_by',
+      'label_b_a' => 'Visited By',
+      'is_active' => 1,
+      'is_reserved' => 1
+    );
+    CRM_Businesslink_RelationshipType::add($relationshipTypeParams);
+  }
+  /**
+   * Method to create required option values
+   */
+  private function createOptionValues() {
     $optionValueParams = array(
       'option_group_id' => 'activity_type',
       'name' => 'Request Business Programme',
@@ -29,12 +62,6 @@ class CRM_Businesslink_Upgrader extends CRM_Businesslink_Upgrader_Base {
   public function uninstall() {
    $this->executeSqlFile('sql/myuninstall.sql');
   }
-
-  /**
-   * Example: Run a simple query when a module is enabled.
-   *
-  public function enable() {
-    CRM_Core_DAO::executeQuery('UPDATE foo SET is_active = 1 WHERE bar = "whiz"');
   }
 
   /**
