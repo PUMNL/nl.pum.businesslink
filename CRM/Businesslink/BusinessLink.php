@@ -8,13 +8,6 @@
  * @license AGPL-3.0
  */
 class CRM_Businesslink_BusinessLink {
-  public static function validateForm($formName, &$fields, &$files, &$form, &$errors) {
-    if ($formName == "CRM_Case_Form_Activity") {
-      CRM_Core_Error::debug('fields', $fields);
-      CRM_Core_Error::debug('form', $form);
-      exit();
-    }
-  }
   /**
    * Method to process civicrm hook buildForm
    *
@@ -22,13 +15,6 @@ class CRM_Businesslink_BusinessLink {
    * @param $form
    */
   public static function buildForm($formName, &$form) {
-    // if form is case summary, remove Request New Business Programme if no Expert
-    if ($formName == "CRM_Case_Form_CaseView") {
-      $formCaseType = $form->getVar('_caseType');
-      if ($formCaseType == 'Business') {
-        self::checkRequestBusinessProgramme($form);
-      }
-    }
     // if form to add activity to case
     if ($formName == "CRM_Case_Form_Activity") {
       $formAction = $form->getVar('_action');
@@ -43,53 +29,6 @@ class CRM_Businesslink_BusinessLink {
         }
       }
     }
-  }
-
-  /**
-   * Method to remove activity from select list on form if no expert on case
-   *
-   * @param $form
-   */
-  private static function checkRequestBusinessProgramme(&$form) {
-    $caseId = $form->getVar('_caseID');
-    $optionsList = $form->_elements[$form->_elementIndex['activity_type_id']]->_options;
-    foreach ($optionsList as $key => $option) {
-      if ($option['text'] == 'Request Business Programme') {
-        if (self::expertOnCase($caseId) == FALSE) {
-          unset($form->_elements[$form->_elementIndex['activity_type_id']]->_options[$key]);
-        }
-      }
-    }
-  }
-
-  /**
-   * Method to check if there is an active expert on the case
-   * @param $caseId
-   * @return bool
-   * @throws Exception when expert relationship type not found
-   */
-  private static function expertOnCase($caseId) {
-    try {
-      $expertRelationshipTypeId = civicrm_api3('RelationshipType', 'getvalue', array(
-        'name_a_b' => 'Expert',
-        'name_b_a' => 'Expert',
-        'return' => 'id'));
-      try {
-        $expertCount = civicrm_api3('Relationship', 'getcount', array(
-          'relationship_type_id' => $expertRelationshipTypeId,
-          'case_id' => $caseId,
-        ));
-        if ($expertCount > 0) {
-          return TRUE;
-        }
-      } catch (CiviCRM_API3_Exception $ex) {
-        return TRUE;
-      }
-    } catch (CiviCRM_API3_Exception $ex) {
-      throw new Exception('Could not find a relationship type with name_a_b Expert in '.__METHOD__
-        .', contact your system administrator');
-    }
-    return FALSE;
   }
 
   /**
