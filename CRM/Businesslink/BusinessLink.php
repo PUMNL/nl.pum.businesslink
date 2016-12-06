@@ -51,12 +51,14 @@ class CRM_Businesslink_BusinessLink {
         'name' => 'Completed',
         'return' => 'value'));
     } catch (CiviCRM_API3_Exception $ex) {}
-    // default assignee is expert
-    $relatedContacts = $form->getVar('_relatedContacts');
-    foreach ($relatedContacts as $relatedContact) {
-      if ($relatedContact['role'] == 'Expert') {
-        $defaults['assignee_contact_id'] = $relatedContact['contact_id'];
-      }
+    // default assignee is expert. Retrieve from API as relatedContacts in form might not
+    // hold the id of the expert if the same contact has more roles. In this case the _relatedContacts
+    // property in the form only holds the unique contact_ids but NOT all the roles! So for example
+    // if sector coordinator is the same as expert, the expert role will not be present
+    $formCaseId = $form->getVar('_caseId');
+    $expertId = CRM_Threepeas_BAO_PumCaseRelation::getCaseExpert($formCaseId);
+    if ($expertId) {
+      $defaults['assignee_contact_id'] = $expertId;
     }
     $form->setDefaults($defaults);
   }

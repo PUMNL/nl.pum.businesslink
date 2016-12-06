@@ -41,11 +41,12 @@ class CRM_Businesslink_Upgrader extends CRM_Businesslink_Upgrader_Base {
     );
     CRM_Businesslink_RelationshipType::add($relationshipTypeParams);
   }
+
   /**
    * Method to create required option values
    */
   private function createOptionValues() {
-    $optionValueParams = array(
+    $reqBusProgParams = array(
       'option_group_id' => 'activity_type',
       'name' => 'Request Business Programme',
       'label' => 'Request Business Programme',
@@ -53,7 +54,16 @@ class CRM_Businesslink_Upgrader extends CRM_Businesslink_Upgrader_Base {
       'is_reserved' => 1,
       'component_id' => 7
     );
-    CRM_Businesslink_OptionValue::add($optionValueParams);
+    CRM_Businesslink_OptionValue::add($reqBusProgParams);
+    $dataDiffParams = array(
+      'option_group_id' => 'activity_type',
+      'name' => 'Different Data Registering',
+      'label' => 'Different Data Registering',
+      'is_active' => 1,
+      'is_reserved' => 1,
+      'component_id' => 7
+    );
+    CRM_Businesslink_OptionValue::add($dataDiffParams);
   }
 
   /**
