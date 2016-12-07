@@ -14,6 +14,7 @@ class CRM_Businesslink_Upgrader extends CRM_Businesslink_Upgrader_Base {
   public function install() {
     $this->createOptionValues();
     $this->createRelationshipTypes();
+    $this->executeCustomDataFile('xml/business_programme.xml');
   }
 
   /**

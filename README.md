@@ -8,9 +8,9 @@ This extension creates activity types, relationship types and groups for the Bus
 
 This extension contains several api's which are described below.
 
-### Busisnesslink.submitvisit
+### Busisnesslink.completevisit
 
-The _Businesslink.submitvisit_ api does the following:
+The _Businesslink.completevisit_ api does the following:
 
 * The activity business programme is updated with the relevant information (visit from/to, result of the visist, send thank you note)
 * A contact of type organisation is created for the company visited
@@ -18,12 +18,14 @@ The _Businesslink.submitvisit_ api does the following:
 * A relationship Employer is added between the company visisted and the contact person
 * A relationship Has Visited is added between the company and the customer
 * The company visited and the contact person are added on the activity Business Programme
+* When a company and contact person already exists on the activity Business Programme those contacts are updated instead of added.
 
 **Parameters**
 
 All parameters are required
 
-    activity_id
+    activity_id - not required; if not set a new activity is created
+    case_id
     company_name
     company_address
     company_postal_code
@@ -40,5 +42,8 @@ All parameters are required
     thank_you_send - 0 = No; 1 = Yes
     cancelled - 0 = No; 1 = Yes
 
+When the parameter cancelled is set to yes no company contact and no contact persons are created and the activity is set to cancelled.
 
+**Return values**
 
+This API does not return anything. On failure it will fail by setting is_error to 1 and it will roll back all data changes.
