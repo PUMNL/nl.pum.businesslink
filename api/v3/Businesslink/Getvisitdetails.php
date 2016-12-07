@@ -8,7 +8,7 @@
  * @return void
  * @see http://wiki.civicrm.org/confluence/display/CRMDOC/API+Architecture+Standards
  */
-function _civicrm_api3_busisnesslink_getvisitdetails_spec(&$spec) {
+function _civicrm_api3_businesslink_getvisitdetails_spec(&$spec) {
   $spec['activity_id']['type'] = 'Integer';
   $spec['activity_id']['api.required'] = 1;
 }
@@ -22,7 +22,7 @@ function _civicrm_api3_busisnesslink_getvisitdetails_spec(&$spec) {
  * @see civicrm_api3_create_error
  * @throws API_Exception
  */
-function civicrm_api3_busisnesslink_getvisitdetails($params) {
+function civicrm_api3_businesslink_getvisitdetails($params) {
   $processor = new CRM_Businesslink_CompleteVisit();
   $returnValues[] = $processor->getVisitDetails($params['activity_id']);
   return civicrm_api3_create_success($returnValues, $params, 'Businesslink', 'Getvisitdetails');
