@@ -4,7 +4,7 @@
  * @license http://www.gnu.org/licenses/agpl-3.0.html
  */
 
-class CRM_Businesslink_CompleteVisit {
+class CRM_Businesslink_BusinessProgrammeVisitAPI {
 
   private $cancelledStatusId;
 
@@ -56,6 +56,12 @@ class CRM_Businesslink_CompleteVisit {
     $this->companyNotCheckedGroupId = civicrm_api3('Group', 'getvalue', array('return' => 'id', 'name' => 'pum_companies_not_checked'));
   }
 
+  /**
+   * Get the details of an existing business programme visit.
+   *
+   * @param $activityId
+   * @return array
+   */
   public function getVisitDetails($activityId) {
     $return = array();
     $return['company_name'] = '';
@@ -107,21 +113,31 @@ class CRM_Businesslink_CompleteVisit {
     return $return;
   }
 
+  /**
+   * Cancel an Business Programme activity.
+   *
+   * @param $activityId
+   */
+  public function cancelVisit($activityId) {
+    $activityParams['id'] = $activityId;
+    $activityParams['status_id'] = $this->cancelledStatusId;
+    civicrm_api3('Activity', 'create', $activityParams);
+  }
+
+  /**
+   * Complete a business programme visit.
+   * @param $params
+   * @return bool
+   */
   public function completeVisit($params) {
     $transaction = new CRM_Core_Transaction();
     try {
-      if (!empty($params['cancelled'])) {
-        if (!empty($params['activity_id'])) {
-          $this->cancelVisit($params['activity_id']);
-        }
-      } else {
-        $customerId = $this->getCustomerId($params['case_id']);
-        $companyContactId = $this->createCompanyContact($params);
-        civicrm_api3('GroupContact', 'create', array('contact_id' => $companyContactId, 'group_id' => $this->companyNotCheckedGroupId, 'status' => 'Added'));
-        $contactPersonId = $this->createCompanyContactPerson($params, $companyContactId);
-        $this->createHasVisitedRelationship($customerId, $companyContactId);
-        $this->createActivity($params, $companyContactId, $contactPersonId);
-      }
+      $customerId = $this->getCustomerId($params['case_id']);
+      $companyContactId = $this->createCompanyContact($params);
+      civicrm_api3('GroupContact', 'create', array('contact_id' => $companyContactId, 'group_id' => $this->companyNotCheckedGroupId, 'status' => 'Added'));
+      $contactPersonId = $this->createCompanyContactPerson($params, $companyContactId);
+      $this->createHasVisitedRelationship($customerId, $companyContactId);
+      $this->createActivity($params, $companyContactId, $contactPersonId);
 
       $transaction->commit();
     } catch (Exception $e) {
@@ -131,6 +147,13 @@ class CRM_Businesslink_CompleteVisit {
     return true;
   }
 
+  /**
+   * Creates or updates a Business Programme activity
+   *
+   * @param $params
+   * @param $companyId
+   * @param $contactPersonId
+   */
   private function createActivity($params, $companyId, $contactPersonId) {
     $activityParams = array();
     if (!empty($params['activity_id'])) {
@@ -258,17 +281,6 @@ class CRM_Businesslink_CompleteVisit {
     civicrm_api3('Address', 'create', $addressParams);
 
     return $companyContactId;
-  }
-
-  /**
-   * Cancel an Business Programme activity.
-   *
-   * @param $activityId
-   */
-  private function cancelVisit($activityId) {
-    $activityParams['id'] = $activityId;
-    $activityParams['status_id'] = $this->cancelledStatusId;
-    civicrm_api3('Activity', 'create', $activityParams);
   }
 
   private function getCustomerId($case_id) {

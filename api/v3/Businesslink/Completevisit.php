@@ -41,8 +41,6 @@ function _civicrm_api3_businesslink_completevisit_spec(&$spec) {
   $spec['result_of_visit']['type'] = 'Date';
   $spec['thank_you_send']['api.required'] = 1;
   $spec['thank_you_send']['type'] = 'Boolean';
-  $spec['cancelled']['api.required'] = 1;
-  $spec['cancelled']['type'] = 'Boolean';
 
 }
 
@@ -56,7 +54,7 @@ function _civicrm_api3_businesslink_completevisit_spec(&$spec) {
  * @throws API_Exception
  */
 function civicrm_api3_businesslink_completevisit($params) {
-  $processor = new CRM_Businesslink_CompleteVisit();
+  $processor = new CRM_Businesslink_BusinessProgrammeVisitAPI();
   if (!$processor->completeVisit($params)) {
     throw new API_Exception('Could not complete business link visit');
   }

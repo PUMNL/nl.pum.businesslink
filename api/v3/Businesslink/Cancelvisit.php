@@ -1,20 +1,20 @@
 <?php
 
 /**
- * Busisnesslink.getvisitdetails API specification (optional)
+ * Businesslink.Cancelvisit API specification (optional)
  * This is used for documentation and validation.
  *
  * @param array $spec description of fields supported by this API call
  * @return void
  * @see http://wiki.civicrm.org/confluence/display/CRMDOC/API+Architecture+Standards
  */
-function _civicrm_api3_businesslink_getvisitdetails_spec(&$spec) {
+function _civicrm_api3_businesslink_cancelvisit_spec(&$spec) {
   $spec['activity_id']['type'] = 'Integer';
   $spec['activity_id']['api.required'] = 1;
 }
 
 /**
- * Busisnesslink.Completevisit API
+ * Businesslink.Cancelvisit API
  *
  * @param array $params
  * @return array API result descriptor
@@ -22,8 +22,10 @@ function _civicrm_api3_businesslink_getvisitdetails_spec(&$spec) {
  * @see civicrm_api3_create_error
  * @throws API_Exception
  */
-function civicrm_api3_businesslink_getvisitdetails($params) {
+function civicrm_api3_businesslink_cancelvisit($params) {
   $processor = new CRM_Businesslink_BusinessProgrammeVisitAPI();
-  $returnValues[] = $processor->getVisitDetails($params['activity_id']);
-  return civicrm_api3_create_success($returnValues, $params, 'Businesslink', 'Getvisitdetails');
+  $processor->cancelVisit($params['activity_id']);
+  $returnValues = array();
+  return civicrm_api3_create_success($returnValues, $params, 'Businesslink', 'Cancelvisit');
 }
+

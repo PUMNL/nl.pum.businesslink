@@ -36,6 +36,18 @@ Returns the following values:
     result_of_visit
     thank_you_send
 
+### Businesslink.cancelvisit
+
+The _Businesslink.cancelvisit_ api cancels an existing business programme.
+
+**Parameters**
+
+    activity_id - required
+
+**Return values**
+
+This API does not return anything. On failure it will fail by setting is_error to 1 and it will roll back all data changes.
+
 ### Busisnesslink.completevisit
 
 The _Businesslink.completevisit_ api does the following:
