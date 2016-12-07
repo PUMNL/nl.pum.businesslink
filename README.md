@@ -18,6 +18,7 @@ The _Businesslink.completevisit_ api does the following:
 * A relationship Employer is added between the company visisted and the contact person
 * A relationship Has Visited is added between the company and the customer
 * The company visited and the contact person are added on the activity Business Programme
+* The company visisted is added to the group Companies Not Checked
 * When a company and contact person already exists on the activity Business Programme those contacts are updated instead of added.
 
 **Parameters**

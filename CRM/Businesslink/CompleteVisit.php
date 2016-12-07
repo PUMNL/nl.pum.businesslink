@@ -20,6 +20,8 @@ class CRM_Businesslink_CompleteVisit {
 
   private $phoneTypeId;
 
+  private $companyNotCheckedGroupId;
+
   public function __construct() {
     $activity_status_option_group = civicrm_api3('OptionGroup', 'getvalue', array('return' => 'id', 'name' => 'activity_status'));
     $this->cancelledStatusId = civicrm_api3('OptionValue', 'getValue', array('name' => 'Cancelled', 'return' => 'value', 'option_group_id' => $activity_status_option_group));
@@ -49,6 +51,8 @@ class CRM_Businesslink_CompleteVisit {
     $this->workLocationTypeId = civicrm_api3('LocationType', 'getvalue', array('name' => 'Work', 'return' => 'id'));
 
     $this->phoneTypeId = civicrm_api3('OptionValue', 'getvalue', array('return' => 'value', 'option_group_id' => 'phone_type', 'name' => 'Phone'));
+
+    $this->companyNotCheckedGroupId = civicrm_api3('Group', 'getvalue', array('return' => 'id', 'name' => 'pum_companies_not_checked'));
   }
 
   public function completeVisit($params) {
@@ -61,6 +65,7 @@ class CRM_Businesslink_CompleteVisit {
       } else {
         $customerId = $this->getCustomerId($params['case_id']);
         $companyContactId = $this->createCompanyContact($params);
+        civicrm_api3('GroupContact', 'create', array('contact_id' => $companyContactId, 'group_id' => $this->companyNotCheckedGroupId, 'status' => 'Added'));
         $contactPersonId = $this->createCompanyContactPerson($params, $companyContactId);
         $this->createHasVisitedRelationship($customerId, $companyContactId);
         $this->createActivity($params, $companyContactId, $contactPersonId);

@@ -14,6 +14,7 @@ class CRM_Businesslink_Upgrader extends CRM_Businesslink_Upgrader_Base {
   public function install() {
     $this->createOptionValues();
     $this->createRelationshipTypes();
+    $this->createGroups();
     $this->executeCustomDataFile('xml/business_programme.xml');
   }
 
@@ -23,8 +24,25 @@ class CRM_Businesslink_Upgrader extends CRM_Businesslink_Upgrader_Base {
   public function enable() {
     $this->createOptionValues();
     $this->createRelationshipTypes();
+    $this->createGroups();
   }
 
+  /**
+   * Method to create required groups
+   */
+  private function createGroups() {
+    $groupParams = array(
+			'name' => 'pum_companies_not_checked',
+			'title' => 'Companies Not Checked',
+			'description' => 'This group contains companies added in Complete Business Link that were not checked yet. Once checked, companies should be removed from this group manually',
+      'group_type' => 2,
+      'visibility' => 'User and User Admin Only',
+      'is_active' => 1,
+      'is_reserved' => 1
+    );
+    CRM_Businesslink_Group::add($groupParams);
+  }
+  
   /**
    * Method to create required relationship types
    */
