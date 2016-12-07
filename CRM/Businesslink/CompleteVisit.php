@@ -33,6 +33,7 @@ class CRM_Businesslink_CompleteVisit {
     $this->customGroups['Business_Programme']['fields']['Contact_person'] = civicrm_api3('CustomField', 'getsingle', array('name' => 'Contact_person', 'custom_group_id' => $this->customGroups['Business_Programme']['id']));
     $this->customGroups['Business_Programme']['fields']['Visit_from'] = civicrm_api3('CustomField', 'getsingle', array('name' => 'Visit_from', 'custom_group_id' => $this->customGroups['Business_Programme']['id']));
     $this->customGroups['Business_Programme']['fields']['Visit_to'] = civicrm_api3('CustomField', 'getsingle', array('name' => 'Visit_ot', 'custom_group_id' => $this->customGroups['Business_Programme']['id']));
+    $this->customGroups['Business_Programme']['fields']['Aim_of_Visit'] = civicrm_api3('CustomField', 'getsingle', array('name' => 'Short_description_Aim_of_Visit', 'custom_group_id' => $this->customGroups['Business_Programme']['id']));
     $this->customGroups['Business_Programme']['fields']['Result_of_Visit'] = civicrm_api3('CustomField', 'getsingle', array('name' => 'Short_description_Result_of_Visit', 'custom_group_id' => $this->customGroups['Business_Programme']['id']));
     $this->customGroups['Business_Programme']['fields']['Thank_you_Note_sent'] = civicrm_api3('CustomField', 'getsingle', array('name' => 'Thank_you_Note_sent', 'custom_group_id' => $this->customGroups['Business_Programme']['id']));
     $this->customGroups['Business_Programme']['fields']['Naam_bedrijf'] = civicrm_api3('CustomField', 'getsingle', array('name' => 'Naam_bedrijf', 'custom_group_id' => $this->customGroups['Business_Programme']['id']));
@@ -53,6 +54,57 @@ class CRM_Businesslink_CompleteVisit {
     $this->phoneTypeId = civicrm_api3('OptionValue', 'getvalue', array('return' => 'value', 'option_group_id' => 'phone_type', 'name' => 'Phone'));
 
     $this->companyNotCheckedGroupId = civicrm_api3('Group', 'getvalue', array('return' => 'id', 'name' => 'pum_companies_not_checked'));
+  }
+
+  public function getVisitDetails($activityId) {
+    $return = array();
+    $return['company_name'] = '';
+    $return['company_address'] = '';
+    $return['company_postal_code'] = '';
+    $return['company_city'] = '';
+    $return['company_email'] = '';
+    $return['contact_person_prefix'] = '';
+    $return['contact_person_firstname'] = '';
+    $return['contact_person_lastname'] = '';
+    $return['contact_person_email'] = '';
+    $return['contact_person_phone'] = '';
+    $return['visit_from'] = '';
+    $return['visit_to'] = '';
+    $return['result_of_visit'] = '';
+    $return['aim_of_visit'] = '';
+    $return['thank_you_send'] = '';
+
+    $activity = $this->getCustomValuesForActivity($activityId);
+
+    $companyContactId = $this->getCurrentCompanyContactId($activityId);
+    if ($companyContactId) {
+      $company = civicrm_api3('Contact', 'getsingle', array('id' => $companyContactId));
+      $return['company_name'] = $company['display_name'];
+      $return['company_address'] = $company['street_address'];
+      $return['company_postal_code'] = $company['postal_code'];
+      $return['company_city'] = $company['city'];
+      $return['company_email'] = $company['email'];
+    } else {
+      $return['company_name'] = $activity['custom_'.$this->customGroups['Business_Programme']['fields']['Naam_bedrijf']['id']];
+      $return['company_city'] = $activity['custom_'.$this->customGroups['Business_Programme']['fields']['Location']['id']];
+    }
+    $contactPersonContactId = $this->getCurrentContactPersonId($activityId);
+    if ($contactPersonContactId) {
+      $contactPerson = civicrm_api3('Contact', 'getsingle', array('id' => $contactPersonContactId));
+      $return['contact_person_prefix'] = $contactPerson['individual_prefix'];
+      $return['contact_person_firstname'] = $contactPerson['first_name'];
+      $return['contact_person_lastname'] = $contactPerson['last_name'];
+      $return['contact_person_email'] = $contactPerson['email'];
+      $return['contact_person_phone'] = $contactPerson['phone'];
+    }
+
+    $return['visit_from'] = $activity['custom_'.$this->customGroups['Business_Programme']['fields']['Visit_from']['id']];
+    $return['visit_to'] = $activity['custom_'.$this->customGroups['Business_Programme']['fields']['Visit_to']['id']];
+    $return['result_of_visit'] = $activity['custom_'.$this->customGroups['Business_Programme']['fields']['Result_of_Visit']['id']];
+    $return['aim_of_visit'] = $activity['custom_'.$this->customGroups['Business_Programme']['fields']['Aim_of_Visit']['id']];
+    $return['thank_you_send'] = $activity['custom_'.$this->customGroups['Business_Programme']['fields']['Thank_you_Note_sent']['id']];
+
+    return $return;
   }
 
   public function completeVisit($params) {
@@ -232,14 +284,7 @@ class CRM_Businesslink_CompleteVisit {
    * @return array|bool
    */
   private function getCurrentContactPersonId($activityId) {
-    try {
-      $activityParams['id'] = $activityId;
-      $activityParams['return'] = 'custom_'.$this->customGroups['Business_Programme']['fields']['Contact_person']['id'];
-      return civicrm_api3('Activity', 'getvalue', $activityParams);
-    } catch (Exception $e) {
-      return false;
-    }
-    return false;
+    return $this->getCustomValueForActivity($activityId, $this->customGroups['Business_Programme']['fields']['Contact_person']['id']);
   }
 
   /**
@@ -249,14 +294,35 @@ class CRM_Businesslink_CompleteVisit {
    * @return array|bool
    */
   private function getCurrentCompanyContactId($activityId) {
-    try {
-      $activityParams['id'] = $activityId;
-      $activityParams['return'] = 'custom_'.$this->customGroups['Business_Programme']['fields']['Company']['id'];
-      return civicrm_api3('Activity', 'getvalue', $activityParams);
-    } catch (Exception $e) {
-      return false;
+    return $this->getCustomValueForActivity($activityId, $this->customGroups['Business_Programme']['fields']['Company']['id']);
+  }
+
+  private function getCustomValueForActivity($activityId, $customFieldId) {
+    $return = array();
+    $customValues = civicrm_api3('CustomValue', 'get', array('entity_id' => $activityId, 'entity_table' => 'civicrm_activity'));
+    foreach($customValues['values'] as $customValue) {
+      if (isset($customValue['id']) && isset($customValue['latest']) && $customValue['id'] == $customFieldId) {
+        return $customValue['latest'];
+      }
     }
     return false;
+  }
+
+  /**
+   * Returns an array with custom values for an activiy.
+   *
+   * @param $activityId
+   * @return array
+   */
+  private function getCustomValuesForActivity($activityId) {
+    $return = array();
+    $customValues = civicrm_api3('CustomValue', 'get', array('entity_id' => $activityId, 'entity_table' => 'civicrm_activity'));
+    foreach($customValues['values'] as $customValue) {
+      if (isset($customValue['id']) && isset($customValue['latest'])) {
+        $return['custom_' . $customValue['id']] = $customValue['latest'];
+      }
+    }
+    return $return;
   }
 
 }

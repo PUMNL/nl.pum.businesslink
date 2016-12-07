@@ -8,6 +8,34 @@ This extension creates activity types, relationship types and groups for the Bus
 
 This extension contains several api's which are described below.
 
+### Businesslink.getvisitdetails
+
+The _Businesslink.getvisitdetails_ api returns the details from a proposed visit.
+
+**Parameters**
+
+    activity_id - required
+
+**Return values**
+
+Returns the following values:
+
+    company_name
+    company_address
+    company_postal_code
+    company_city
+    company_email
+    contact_person_prefix
+    contact_person_firstname
+    contact_person_lastname
+    contact_person_email
+    contact_person_phone
+    visit_from
+    visit_to
+    aim_of_visit
+    result_of_visit
+    thank_you_send
+
 ### Busisnesslink.completevisit
 
 The _Businesslink.completevisit_ api does the following:
