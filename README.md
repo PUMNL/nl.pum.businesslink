@@ -103,20 +103,18 @@ Functionally the API will:
 **Parameters**
 All parameters are required
 
-    first_name
-    last_name
-    passport_first_name
-    passport_last_name
-    passport_number
-    passport_expiry_date
-    gender_id
-    birth_date
-    nationality
-    email
-    job_title
-    period_start_date
-    period_end_date
-    case_id  
+    first_name STRING
+    last_name STRING
+    passport_first_name STRING
+    passport_last_name STRING
+    passport_number STRING
+    passport_expiry_date DATE
+    gender STRING
+    birth_date DATE
+    nationality_id INT
+    email STRING
+    job_title STRING
+    case_id  INT
 
 **Return values**
 This API does not return anything. On failure it will fail by setting is_error to 1 and it will roll back all data changes.
