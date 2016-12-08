@@ -88,3 +88,35 @@ When the parameter cancelled is set to yes no company contact and no contact per
 **Return values**
 
 This API does not return anything. On failure it will fail by setting is_error to 1 and it will roll back all data changes.
+
+### BusinessParticipant.create
+This API will add a business participant to CiviCRM from the data entered on the portal by the customer. 
+The create API will be called whenever a customer registers a new participant on the webform.
+
+Functionally the API will:
+* check if the contact is known based on the email
+> * if the contact exists and some of the data is different, the API will add the activity *Different Data on Registration* to the case listing the data differences
+> * if the contact does not exist it will create a new contact with a relation *Employee of* to the customer of the case
+* create a case role (relationship on the case) of the type *Business participant is*
+* create a case of the type TravelCase for the participant
+
+**Parameters**
+All parameters are required
+
+    first_name
+    last_name
+    passport_first_name
+    passport_last_name
+    passport_number
+    passport_expiry_date
+    gender_id
+    birth_date
+    nationality
+    email
+    job_title
+    period_start_date
+    period_end_date
+    case_id  
+
+**Return values**
+This API does not return anything. On failure it will fail by setting is_error to 1 and it will roll back all data changes.
