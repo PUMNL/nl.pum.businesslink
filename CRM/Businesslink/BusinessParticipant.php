@@ -124,14 +124,14 @@ class CRM_Businesslink_BusinessParticipant {
    */
   public function removeTravelCase($relationshipId) {
     if (!empty($relationshipId)) {
-     $relationSql = "SELECT contact_id_b FROM civicrm_relationship WHERE id = %1";
-     $contactId = CRM_Core_DAO::singleValueQuery($relationSql, array(1 => array($relationshipId, 'Integer')));
-     if ($contactId) {
+     $relationSql = "SELECT contact_id_b, case_id FROM civicrm_relationship WHERE id = %1";
+     $relationship = CRM_Core_DAO::executeQuery($relationSql, array(1 => array($relationshipId, 'Integer')));
+     if ($relationship->fetch()) {
        $travelCaseSql = "SELECT entity_id FROM ".$this->_travelParentTableName." tp LEFT JOIN civicrm_case_contact cc 
       ON tp.entity_id = cc.case_id WHERE tp.case_id = %1 AND cc.contact_id = %2";
        $params = array(
-         1 => array($this->_sourceData['case_id'], 'Integer'),
-         2 => array($contactId, 'Integer'));
+         1 => array($relationship->case_id, 'Integer'),
+         2 => array($relationship->contact_id_b, 'Integer'));
        $caseId = CRM_Core_DAO::singleValueQuery($travelCaseSql, $params);
        civicrm_api3('Case', 'delete', array('id' => $caseId));
      }
