@@ -133,7 +133,9 @@ class CRM_Businesslink_BusinessParticipant {
          1 => array($relationship->case_id, 'Integer'),
          2 => array($relationship->contact_id_b, 'Integer'));
        $caseId = CRM_Core_DAO::singleValueQuery($travelCaseSql, $params);
-       civicrm_api3('Case', 'delete', array('id' => $caseId));
+       try {
+         civicrm_api3('Case', 'delete', array('id' => $caseId));
+       } catch (CiviCRM_API3_Exception $ex) {}
      }
     }
   }
