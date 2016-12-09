@@ -81,9 +81,9 @@ function _civicrm_api3_business_participant_create_spec(&$spec) {
     'type' => CRM_Utils_Type::T_INT,
     'api.required' => 1
   );
-  $spec['relation_id'] = array(
-    'name' => 'relation_id',
-    'title' => 'relation_id',
+  $spec['relationship_id'] = array(
+    'name' => 'relationship_id',
+    'title' => 'relationship_id',
     'type' => CRM_Utils_Type::T_INT,
     'api.required' => 0
   );

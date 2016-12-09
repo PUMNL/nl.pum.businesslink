@@ -120,12 +120,12 @@ class CRM_Businesslink_BusinessParticipant {
    * Use the relation to find the contact_id_b, then use that found contact_id in combination with the
    * case_id passed to find the travel case and delete it
    *
-   * @param $relationId
+   * @param $relationshipId
    */
-  public function removeTravelCase($relationId) {
-    if (!empty($relationId)) {
+  public function removeTravelCase($relationshipId) {
+    if (!empty($relationshipId)) {
      $relationSql = "SELECT contact_id_b FROM civicrm_relationship WHERE id = %1";
-     $contactId = CRM_Core_DAO::singleValueQuery($relationSql, array(1 => array($relationId, 'Integer')));
+     $contactId = CRM_Core_DAO::singleValueQuery($relationSql, array(1 => array($relationshipId, 'Integer')));
      if ($contactId) {
        $travelCaseSql = "SELECT entity_id FROM ".$this->_travelParentTableName." tp LEFT JOIN civicrm_case_contact cc 
       ON tp.entity_id = cc.case_id WHERE tp.case_id = %1 AND cc.contact_id = %2";
@@ -140,11 +140,11 @@ class CRM_Businesslink_BusinessParticipant {
   /**
    * Method to remove the relationship on id
    *
-   * @param $relationId
+   * @param $relationshipId
    */
-  public function removeRelationship($relationId) {
-    if (!empty($relationId)) {
-      civicrm_api3('Relationship', 'delete', array('id' => $relationId));
+  public function removeRelationship($relationshipId) {
+    if (!empty($relationshipId)) {
+      civicrm_api3('Relationship', 'delete', array('id' => $relationshipId));
     }
   }
 

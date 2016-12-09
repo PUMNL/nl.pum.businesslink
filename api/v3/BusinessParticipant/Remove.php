@@ -10,8 +10,8 @@
  */
 function _civicrm_api3_business_participant_create_spec(&$spec) {
   $spec['relation_id'] = array(
-    'name' => 'relation_id',
-    'title' => 'relation_id',
+    'name' => 'relationship_id',
+    'title' => 'relationship_id',
     'type' => CRM_Utils_Type::T_INT,
     'api.required' => 1
   );
@@ -29,8 +29,8 @@ function _civicrm_api3_business_participant_create_spec(&$spec) {
  */
 function civicrm_api3_business_participant_remove($params) {
   $handler = new CRM_Businesslink_BusinessParticipant();
-  $handler->removeTravelCase($params['relation_id']);
-  $handler->removeRelationship($params['relation_id']);
+  $handler->removeTravelCase($params['relationship_id']);
+  $handler->removeRelationship($params['relationship_id']);
   return civicrm_api3_create_success(array(), $params, 'BusinessParticipant', 'Remove');
 }
 
