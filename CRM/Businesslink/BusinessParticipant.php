@@ -38,6 +38,7 @@ class CRM_Businesslink_BusinessParticipant {
   private $_nationalityTableName = NULL;
   private $_nationalityCustomId = NULL;
   private $_dataDifferences = array();
+  private $_authorisedContactId = NULL;
 
   /**
    * CRM_Businesslink_BusinessParticipant constructor.
@@ -178,7 +179,9 @@ class CRM_Businesslink_BusinessParticipant {
 
   /**
    * Method to either find contact or create one based on passport number:
-   * - if none found, create contact
+   * - if none found, create contact unless the authorised contact of the customer has no passport number yet and
+   *   the email of the authorised contact is equal to the email passed in. If that is the case, use and update
+   *   the authorised contact
    * - if one found, use contact
    * - if more found, create data difference activity, use oldest
    *
@@ -199,7 +202,12 @@ class CRM_Businesslink_BusinessParticipant {
 
     switch ($dao->N) {
       case 0:
-        $contact = $this->createContact();
+        if ($this->isAuthorisedContact() == TRUE) {
+          $this->_businessParticipantContactId = $this->_authorisedContactId;
+          $this->updateAuthorisedContact();
+        } else {
+          $contact = $this->createContact();
+        }
         if (isset($contact['id'])) {
           $this->_businessParticipantContactId = $contact['id'];
         }
@@ -219,6 +227,76 @@ class CRM_Businesslink_BusinessParticipant {
         return TRUE;
         break;
     }
+  }
+
+  /**
+   * Method to check if the person registering is the authorised contact. This should only
+   * be called if there is no match on passport number.
+   * The authorised contact of the case customer is retrieved, and if the authorised contact does
+   * not have a passport number and the email address is the same as in the registration, return TRUE
+   *
+   * @return bool
+   */
+  private function isAuthorisedContact() {
+    $this->_authorisedContactId = CRM_Threepeas_BAO_PumCaseRelation::getAuthorisedContactId($this->_caseCustomerId);
+    if ($this->_authorisedContactId) {
+      $ppNumber = 'custom_'.$this->_passportNumberCustomId;
+      try {
+        $authorisedContact = civicrm_api3('Contact', 'getsingle', array(
+          'id' => $this->_authorisedContactId,
+          'return' => 'email,'.$ppNumber
+        ));
+        if (empty($authorisedContact[$ppNumber])) {
+          if ($authorisedContact['email'] == $this->_sourceData['email']) {
+            return TRUE;
+          }
+        }
+      } catch (CiviCRM_API3_Exception $ex) {
+      }
+    }
+    return FALSE;
+  }
+
+  /**
+   * Method to update the authorised contact with the data from the registration
+   */
+  private function updateAuthorisedContact() {
+    $ppFirst = 'custom_'.$this->_passportFirstCustomId;
+    $ppLast = 'custom_'.$this->_passportLastCustomId;
+    $ppNumber = 'custom_'.$this->_passportNumberCustomId;
+    $ppExpiry = 'custom_'.$this->_passportExpiryCustomId;
+    $nationality = 'custom_'.$this->_nationalityCustomId;
+
+    $params = array('id' => $this->_authorisedContactId);
+    $standardFields = array('first_name', 'last_name', 'gender_id', 'job_title');
+    foreach ($standardFields as $fieldName) {
+      if (!empty($this->_sourceData[$fieldName])) {
+        $params[$fieldName] = $this->_sourceData[$fieldName];
+      }
+    }
+    // birth_date
+    if (!empty($this->_sourceData['birth_date'])) {
+      $params['birth_date'] = date('d-m-Y', strtotime($this->_sourceData['birth_date']));
+    }
+    // custom fields
+    if (!empty($this->_sourceData['passport_first_name'])) {
+      $params[$ppFirst] = $this->_sourceData['passport_first_name'];
+    }
+    if (!empty($this->_sourceData['passport_last_name'])) {
+      $params[$ppLast] = $this->_sourceData['passport_last_name'];
+    }
+    if (!empty($this->_sourceData['passport_number'])) {
+      $params[$ppNumber] = $this->_sourceData['passport_number'];
+    }
+    if (!empty($this->_sourceData['passport_expiry_date'])) {
+      $params[$ppExpiry] = date('d-m-Y', strtotime($this->_sourceData['passport_expiry_date']));
+    }
+    if (!empty($this->_sourceData['nationality'])) {
+      $params[$nationality] = $this->_sourceData['nationality'];
+    }
+    try {
+      civicrm_api3('Contact', 'create', $params);
+    } catch (CiviCRM_API3_Exception $ex) {}
   }
 
   /**
