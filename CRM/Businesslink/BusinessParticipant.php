@@ -96,8 +96,8 @@ class CRM_Businesslink_BusinessParticipant {
     $this->retrieveCaseData();
     // if relationship_id is passed, this is an edit which means the 'old' stuff has to be removed first.
     if (isset($this->_sourceData['relationship_id']) && !empty($this->_sourceData['relationship_id'])) {
-      $this->removeTravelCase();
-      $this->removeRelationship();
+      $this->removeTravelCase($this->_sourceData['relationship_id']);
+      $this->removeRelationship($this->_sourceData['relationship_id']);
     }
     // match contact
     $this->matchContact();
@@ -119,11 +119,13 @@ class CRM_Businesslink_BusinessParticipant {
    * Method to remove the travel case based on an incoming relation (edit or remove option used on form)
    * Use the relation to find the contact_id_b, then use that found contact_id in combination with the
    * case_id passed to find the travel case and delete it
+   *
+   * @param $relationId
    */
-  private function removeTravelCase() {
-    if (isset($this->_sourceData['relationship_id']) && !empty($this->_sourceData['relationship_id'])) {
+  public function removeTravelCase($relationId) {
+    if (!empty($relationId)) {
      $relationSql = "SELECT contact_id_b FROM civicrm_relationship WHERE id = %1";
-     $contactId = CRM_Core_DAO::singleValueQuery($relationSql, array(1 => array($this->_sourceData['relationship_id'], 'Integer')));
+     $contactId = CRM_Core_DAO::singleValueQuery($relationSql, array(1 => array($relationId, 'Integer')));
      if ($contactId) {
        $travelCaseSql = "SELECT entity_id FROM ".$this->_travelParentTableName." tp LEFT JOIN civicrm_case_contact cc 
       ON tp.entity_id = cc.case_id WHERE tp.case_id = %1 AND cc.contact_id = %2";
@@ -137,10 +139,12 @@ class CRM_Businesslink_BusinessParticipant {
   }
   /**
    * Method to remove the relationship on id
+   *
+   * @param $relationId
    */
-  private function removeRelationship() {
-    if (isset($this->_sourceData['relationship_id']) && !empty($this->_sourceData['relationship_id'])) {
-      civicrm_api3('Relationship', 'delete', array('id' => $this->_sourceData['relationship_id']));
+  public function removeRelationship($relationId) {
+    if (!empty($relationId)) {
+      civicrm_api3('Relationship', 'delete', array('id' => $relationId));
     }
   }
 
