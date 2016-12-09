@@ -264,7 +264,7 @@ class CRM_Businesslink_BusinessParticipant {
    */
   private function createTravelCase() {
     $travelCaseParams = array(
-      'client_id' => $this->_businessParticipantContactId,
+      'contact_id' => $this->_businessParticipantContactId,
       'subject' => '{contactName}-{caseType}-{caseId}',
       'case_type_id' => $this->_travelCaseTypeId
     );
@@ -315,13 +315,20 @@ class CRM_Businesslink_BusinessParticipant {
       'return' => 'first_name,last_name,gender_id,birth_date,job_title,email,'.$ppFirst.','.$ppLast.','.$ppNumber.','. $ppExpiry, $nationality);
     $contact = civicrm_api3('Contact', 'getsingle', $contactParams);
     // check all standard data elements and add to difference array if different
-    $fieldsToCheck = array('first_name', 'last_name', 'birth_date', 'gender_id', 'job_title', 'email');
+    $fieldsToCheck = array('first_name', 'last_name', 'gender_id', 'job_title', 'email');
     foreach ($fieldsToCheck as $fieldName) {
       if ($contact[$fieldName] != $this->_sourceData[$fieldName]) {
         $this->_dataDifferences[$fieldName] = array('old' => $contact[$fieldName],
           'new' => $this->_sourceData[$fieldName]);
       }
     }
+    // check birth date
+    $birthOld = new DateTime($contact['birth_date']);
+    $birthNew = new DateTime($this->_sourceData['birth_date']);
+    if ($birthOld != $birthNew) {
+      $this->_dataDifferences['birth_date'] = array('old' => $birthOld, 'new' => $birthNew);
+    }
+
     // now check all custom fields
     if ($contact[$ppFirst] != $this->_sourceData['passport_first_name']) {
       $this->_dataDifferences['passport_first_name'] = array('old' => $contact[$ppFirst],
@@ -335,9 +342,10 @@ class CRM_Businesslink_BusinessParticipant {
       $this->_dataDifferences['passport_number'] = array('old' => $contact[$ppNumber],
         'new' => $this->_sourceData['passport_number']);
     }
-    if ($contact[$ppExpiry] != $this->_sourceData['passport_expiry_date']) {
-      $this->_dataDifferences['passport_expiry_date'] = array('old' => $contact[$ppExpiry],
-        'new' => $this->_sourceData['passport_expiry_date']);
+    $expiryOld = new DateTime($contact[$ppExpiry]);
+    $expiryNew = new DateTime($this->_sourceData['passport_expiry_date']);
+    if ($expiryOld != $expiryNew) {
+      $this->_dataDifferences['passport_expiry_date'] = array('old' => $expiryOld, 'new' => $expiryNew);
     }
     if ($contact[$nationality] != $this->_sourceData['nationality_id']) {
       $this->_dataDifferences['nationality_id'] = array('old' => $contact[$nationality],
