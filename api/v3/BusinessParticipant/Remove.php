@@ -9,7 +9,7 @@
  * @see http://wiki.civicrm.org/confluence/display/CRMDOC/API+Architecture+Standards
  */
 function _civicrm_api3_business_participant_create_spec(&$spec) {
-  $spec['relation_id'] = array(
+  $spec['relationship_id'] = array(
     'name' => 'relationship_id',
     'title' => 'relationship_id',
     'type' => CRM_Utils_Type::T_INT,
