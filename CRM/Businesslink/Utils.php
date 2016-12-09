@@ -135,6 +135,7 @@ class CRM_Businesslink_Utils {
     // then assign new variables
     foreach ($vars as $key => $value) {
       $key = str_replace(' ', '_', $key);
+
       $smarty->assign($key, $value);
     }
 

@@ -94,6 +94,11 @@ class CRM_Businesslink_BusinessParticipant {
     }
     // get case data
     $this->retrieveCaseData();
+    // if relationship_id is passed, this is an edit which means the 'old' stuff has to be removed first.
+    if (isset($this->_sourceData['relationship_id']) && !empty($this->_sourceData['relationship_id'])) {
+      $this->removeTravelCase();
+      $this->removeRelationship();
+    }
     // match contact
     $this->matchContact();
     // add relationship Business Participant (case role)
@@ -108,6 +113,35 @@ class CRM_Businesslink_BusinessParticipant {
     $this->createRelationship($relationshipParams);
     // and finally add travel case
     $this->createTravelCase();
+  }
+
+  /**
+   * Method to remove the travel case based on an incoming relation (edit or remove option used on form)
+   * Use the relation to find the contact_id_b, then use that found contact_id in combination with the
+   * case_id passed to find the travel case and delete it
+   */
+  private function removeTravelCase() {
+    if (isset($this->_sourceData['relationship_id']) && !empty($this->_sourceData['relationship_id'])) {
+     $relationSql = "SELECT contact_id_b FROM civicrm_relationship WHERE id = %1";
+     $contactId = CRM_Core_DAO::singleValueQuery($relationSql, array(1 => array($this->_sourceData['relationship_id'], 'Integer')));
+     if ($contactId) {
+       $travelCaseSql = "SELECT entity_id FROM ".$this->_travelParentTableName." tp LEFT JOIN civicrm_case_contact cc 
+      ON tp.entity_id = cc.case_id WHERE tp.case_id = %1 AND cc.contact_id = %2";
+       $params = array(
+         1 => array($this->_sourceData['case_id'], 'Integer'),
+         2 => array($contactId, 'Integer'));
+       $caseId = CRM_Core_DAO::singleValueQuery($travelCaseSql, $params);
+       civicrm_api3('Case', 'delete', array('id' => $caseId));
+     }
+    }
+  }
+  /**
+   * Method to remove the relationship on id
+   */
+  private function removeRelationship() {
+    if (isset($this->_sourceData['relationship_id']) && !empty($this->_sourceData['relationship_id'])) {
+      civicrm_api3('Relationship', 'delete', array('id' => $this->_sourceData['relationship_id']));
+    }
   }
 
   /**
@@ -166,10 +200,10 @@ class CRM_Businesslink_BusinessParticipant {
         break;
       case 1:
         $dao->fetch();
+        $this->_businessParticipantContactId = $dao->entity_id;
         if ($this->isDataDifferent($dao->entity_id) == TRUE) {
           $this->createDataDifference('diff', $dao->entity_id);
         }
-        $this->_businessParticipantContactId = $dao->entitiy_id;
         return TRUE;
         break;
       default:
@@ -192,12 +226,12 @@ class CRM_Businesslink_BusinessParticipant {
     switch ($type) {
       case "diff":
         $subject = ts("Registration has different data than contact in database for contact id ").
-          $this->_businessParticipantContactId;
+          $contactId;
         $details = CRM_Businesslink_Utils::renderTemplate('DataDifference.tpl', $this->_dataDifferences);
         break;
       case "more":
         $subject = ts("Found more than one contact with passport number ").$this->_sourceData['passport_number'].
-          ", used contact id ".$this->_businessParticipantContactId;
+          ", used contact id ".$contactId;
         $details = "";
         break;
       default:
@@ -210,6 +244,7 @@ class CRM_Businesslink_BusinessParticipant {
       'status_id' => $this->_scheduledActivityStatusId,
       'subject' => $subject,
       'source_contact_id' => $this->_caseCustomerId,
+      'target_customer_id' => $contactId,
       'details' => $details
     );
     if (!empty($this->_caseProjectOfficerId)) {
@@ -249,7 +284,7 @@ class CRM_Businesslink_BusinessParticipant {
       'custom_'.$this->_passportLastCustomId => trim(stripslashes($this->_sourceData['passport_last_name'])),
       'custom_'.$this->_passportNumberCustomId => trim(stripslashes($this->_sourceData['passport_number'])),
       'custom_'.$this->_passportExpiryCustomId => date('d-m-Y', strtotime($this->_sourceData['passport_expiry_date'])),
-      'custom_'.$this->_nationalityCustomId => $this->_sourceData['nationality_id'],
+      'custom_'.$this->_nationalityCustomId => $this->_sourceData['nationality'],
     );
     try {
       return civicrm_api3('Contact', 'create', $contactParams);
@@ -263,23 +298,47 @@ class CRM_Businesslink_BusinessParticipant {
    * Method to create a travel case and the link to the parent case
    */
   private function createTravelCase() {
-    $travelCaseParams = array(
-      'contact_id' => $this->_businessParticipantContactId,
-      'subject' => '{contactName}-{caseType}-{caseId}',
-      'case_type_id' => $this->_travelCaseTypeId
-    );
-    try {
-      $travelCase = civicrm_api3('Case', 'create', $travelCaseParams);
-      // now link parent case
-      $sql = 'INSERT INTO '.$this->_travelParentTableName.' (entity_id, '.$this->_travelParentCaseIdColumnName
-        .') VALUES(%1, %2)';
-      CRM_Core_DAO::executeQuery($sql, array(
-        1 => array($travelCase['id'], 'Integer'),
-        2 => array($this->_sourceData['case_id'], 'Integer')));
-    } catch (CiviCRM_API3_Exception $ex) {
-      throw new Exception('Could not create a travel case for contact id '.$this->_businessParticipantContactId.' in '
-        .__METHOD__.', contact your system administrator. Error from API Case create: '.$ex->getMessage());
+    // if there is already a travel case on this contact id linked to the same parent case, do not create.
+    if ($this->travelCaseExists() == FALSE) {
+      $travelCaseParams = array(
+        'contact_id' => $this->_businessParticipantContactId,
+        'subject' => '{contactName}-{caseType}-{caseId}',
+        'case_type_id' => $this->_travelCaseTypeId
+      );
+      try {
+        $travelCase = civicrm_api3('Case', 'create', $travelCaseParams);
+        // now link parent case
+        $sql = 'INSERT INTO ' . $this->_travelParentTableName . ' (entity_id, ' . $this->_travelParentCaseIdColumnName
+          . ') VALUES(%1, %2)';
+        CRM_Core_DAO::executeQuery($sql, array(
+          1 => array($travelCase['id'], 'Integer'),
+          2 => array($this->_sourceData['case_id'], 'Integer')));
+      } catch (CiviCRM_API3_Exception $ex) {
+        throw new Exception('Could not create a travel case for contact id ' . $this->_businessParticipantContactId . ' in '
+          . __METHOD__ . ', contact your system administrator. Error from API Case create: ' . $ex->getMessage());
+      }
     }
+  }
+
+  /**
+   * Method to check if there is already as travel case for the contact linked to the same parent case
+   * This could be the case when the data coming in from the form just has a correction of the name, but the travel case
+   * was already created in the first registration
+   *
+   * @return bool
+   */
+  private function travelCaseExists() {
+    $sql = "SELECT COUNT(*) FROM ".$this->_travelParentTableName." tp LEFT JOIN civicrm_case_contact cc 
+      ON tp.entity_id = cc.case_id WHERE tp.case_id = %1 AND cc.contact_id = %2";
+    $params = array(
+      1 => array($this->_sourceData['case_id'], 'Integer'),
+      2 => array($this->_businessParticipantContactId, 'Integer')
+    );
+    $travelCaseCount = CRM_Core_DAO::singleValueQuery($sql, $params);
+    if ($travelCaseCount > 0) {
+      return TRUE;
+    }
+    return FALSE;
   }
 
   /**
@@ -288,6 +347,7 @@ class CRM_Businesslink_BusinessParticipant {
    * @param $params
    */
   private function createRelationship($params) {
+    //first check if relationship does not exist yet, and if not create
     try {
       civicrm_api3('Relationship', 'create', $params);
     } catch (CiviCRM_API3_Exception $ex) {}
@@ -315,12 +375,17 @@ class CRM_Businesslink_BusinessParticipant {
       'return' => 'first_name,last_name,gender_id,birth_date,job_title,email,'.$ppFirst.','.$ppLast.','.$ppNumber.','. $ppExpiry, $nationality);
     $contact = civicrm_api3('Contact', 'getsingle', $contactParams);
     // check all standard data elements and add to difference array if different
-    $fieldsToCheck = array('first_name', 'last_name', 'gender_id', 'job_title', 'email');
+    $fieldsToCheck = array('first_name', 'last_name', 'job_title', 'email');
     foreach ($fieldsToCheck as $fieldName) {
       if ($contact[$fieldName] != $this->_sourceData[$fieldName]) {
         $this->_dataDifferences[$fieldName] = array('old' => $contact[$fieldName],
           'new' => $this->_sourceData[$fieldName]);
       }
+    }
+    // check gender (check id and show label)
+    if ($contact['gender_id'] != $this->_sourceData['gender_id']) {
+      $this->_dataDifferences['gender'] = array('old' => $contact['gender'],
+        'new' => $this->_sourceData['gender']);
     }
     // check birth date
     $birthOld = new DateTime($contact['birth_date']);
@@ -347,13 +412,14 @@ class CRM_Businesslink_BusinessParticipant {
     if ($expiryOld != $expiryNew) {
       $this->_dataDifferences['passport_expiry_date'] = array('old' => $expiryOld, 'new' => $expiryNew);
     }
-    if ($contact[$nationality] != $this->_sourceData['nationality_id']) {
-      $this->_dataDifferences['nationality_id'] = array('old' => $contact[$nationality],
-        'new' => $this->_sourceData['nationality_id']);
+    if ($contact[$nationality] != $this->_sourceData['nationality']) {
+      $this->_dataDifferences['nationality'] = array('old' => $contact[$nationality],
+        'new' => $this->_sourceData['nationality']);
     }
     if (empty($this->_dataDifferences)) {
       return FALSE;
     } else {
+      $this->_dataDifferences['contact'] = array('contact_id' => $contactId, 'contact_name' => CRM_Threepeas_Utils::getContactName($contactId));
       return TRUE;
     }
   }

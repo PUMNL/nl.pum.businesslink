@@ -57,10 +57,10 @@ function _civicrm_api3_business_participant_create_spec(&$spec) {
     'type' => CRM_Utils_Type::T_DATE,
     'api.required' => 1
   );
-  $spec['nationality_id'] = array(
-    'name' => 'nationality_id',
-    'title' => 'nationality_id',
-    'type' => CRM_Utils_Type::T_INT,
+  $spec['nationality'] = array(
+    'name' => 'nationality',
+    'title' => 'nationality',
+    'type' => CRM_Utils_Type::T_STRING,
     'api.required' => 1
   );
   $spec['email'] = array(

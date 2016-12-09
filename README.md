@@ -101,7 +101,8 @@ Functionally the API will:
 * create a case of the type TravelCase for the participant
 
 **Parameters**
-All parameters are required
+All parameters are required (apart from relationship_id which denotes that an existing Business Participant is edited 
+rather than a new one being added)
 
     first_name STRING
     last_name STRING
@@ -111,10 +112,11 @@ All parameters are required
     passport_expiry_date DATE
     gender STRING
     birth_date DATE
-    nationality_id INT
+    nationality STRING
     email STRING
     job_title STRING
     case_id  INT
+    relationship_id INT (if present treat request as edit)
 
 **Return values**
 This API does not return anything. On failure it will fail by setting is_error to 1 and it will roll back all data changes.
