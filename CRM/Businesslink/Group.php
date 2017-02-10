@@ -56,12 +56,12 @@ class CRM_Businesslink_Group {
    * @param $params
    */
   private static function exists(&$params) {
-    $params['return'] = 'id';
+    $api_params['return'] = 'id';
+    $api_params['name'] = $params['name'];
     try {
-      $params['id'] = civicrm_api3('RelationshipType', 'getvalue', $params);
-      unset($params['return']);
+      $params['id'] = civicrm_api3('Group', 'getvalue', $api_params);
     } catch (CiviCRM_API3_Exception $ex) {
-      unset($params['return']);
+      // Do nothing
     }
   }
 }
