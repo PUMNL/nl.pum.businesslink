@@ -456,7 +456,7 @@ class CRM_Businesslink_BusinessParticipant {
     $nationality = 'custom_'.$this->_nationalityCustomId;
     $contactParams = array(
       'id' => $contactId,
-      'return' => 'first_name,last_name,gender_id,birth_date,job_title,email,'.$ppFirst.','.$ppLast.','.$ppNumber.','. $ppExpiry, $nationality);
+      'return' => 'first_name,last_name,gender_id,birth_date,job_title,email,'.$ppFirst.','.$ppLast.','.$ppNumber.','. $ppExpiry.','.$nationality);
     $contact = civicrm_api3('Contact', 'getsingle', $contactParams);
     // check all standard data elements and add to difference array if different
     $fieldsToCheck = array('first_name', 'last_name', 'job_title', 'email');
