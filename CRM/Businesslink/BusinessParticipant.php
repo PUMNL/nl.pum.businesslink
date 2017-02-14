@@ -475,7 +475,7 @@ class CRM_Businesslink_BusinessParticipant {
     $birthOld = new DateTime($contact['birth_date']);
     $birthNew = new DateTime($this->_sourceData['birth_date']);
     if ($birthOld != $birthNew) {
-      $this->_dataDifferences['birth_date'] = array('old' => $birthOld, 'new' => $birthNew);
+      $this->_dataDifferences['birth_date'] = array('old' => $birthOld->format("d-m-Y"), 'new' => $birthNew->format('d-m-Y'));
     }
 
     // now check all custom fields
@@ -494,7 +494,7 @@ class CRM_Businesslink_BusinessParticipant {
     $expiryOld = new DateTime($contact[$ppExpiry]);
     $expiryNew = new DateTime($this->_sourceData['passport_expiry_date']);
     if ($expiryOld != $expiryNew) {
-      $this->_dataDifferences['passport_expiry_date'] = array('old' => $expiryOld, 'new' => $expiryNew);
+      $this->_dataDifferences['passport_expiry_date'] = array('old' => $expiryOld->format('d-m-Y'), 'new' => $expiryNew->format('d-m-Y'));
     }
     if ($contact[$nationality] != $this->_sourceData['nationality']) {
       $this->_dataDifferences['nationality'] = array('old' => $contact[$nationality],
