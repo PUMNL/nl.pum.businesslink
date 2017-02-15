@@ -97,7 +97,6 @@ class CRM_Businesslink_BusinessParticipant {
     $this->retrieveCaseData();
     // if relationship_id is passed, this is an edit which means the 'old' stuff has to be removed first.
     if (isset($this->_sourceData['relationship_id']) && !empty($this->_sourceData['relationship_id'])) {
-      $this->removeTravelCase($this->_sourceData['relationship_id']);
       $this->removeRelationship($this->_sourceData['relationship_id']);
     }
     // match contact
@@ -147,7 +146,11 @@ class CRM_Businesslink_BusinessParticipant {
    */
   public function removeRelationship($relationshipId) {
     if (!empty($relationshipId)) {
-      civicrm_api3('Relationship', 'delete', array('id' => $relationshipId));
+      try {
+        civicrm_api3('Relationship', 'delete', array('id' => $relationshipId));
+      } catch (CiviCRM_API3_Exception $ex) {
+        // Do nothing
+      }
     }
   }
 
@@ -199,7 +202,6 @@ class CRM_Businesslink_BusinessParticipant {
     $sql = "SELECT entity_id FROM ".$this->_passportInfoTableName." WHERE ".$this->_passportNumberColumnName
       ." = %1 ORDER BY entity_id";
     $dao = CRM_Core_DAO::executeQuery($sql, array(1 => array($this->_sourceData['passport_number'], 'String')));
-
     switch ($dao->N) {
       case 0:
         if ($this->isAuthorisedContact() == TRUE) {
@@ -433,8 +435,35 @@ class CRM_Businesslink_BusinessParticipant {
   private function createRelationship($params) {
     //first check if relationship does not exist yet, and if not create
     try {
-      civicrm_api3('Relationship', 'create', $params);
-    } catch (CiviCRM_API3_Exception $ex) {}
+      // Do a check whether the relationship already exists. If so do not try
+      // to recreate otherwise the API throws an exception and the transaction is roll backed.
+      if (!$this->doesRelationshipExists($params)) {
+        civicrm_api3('Relationship', 'create', $params);
+      }
+    } catch (CiviCRM_API3_Exception $ex) {
+      // Do nothing
+    }
+  }
+
+  /**
+   * Check whether a relationship exists.
+   * @param $params
+   * @return bool
+   */
+  private function doesRelationshipExists($params) {
+    $checkParams['relationship_type_id'] = $params['relationship_type_id'];
+    $checkParams['contact_id_a'] = $params['contact_id_a'];
+    $checkParams['contact_id_b'] = $params['contact_id_b'];
+    $checkParams['case_id'] = $params['case_id'];
+    try {
+      $relationship = civicrm_api3('Relationship', 'getsingle', $checkParams);
+      if (!empty($relationship['id'])) {
+        return true;
+      }
+    } catch (CiviCRM_API3_Exception $ex) {
+      // Do nothing
+    }
+    return false;
   }
 
   /**
