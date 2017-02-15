@@ -35,7 +35,7 @@ class CRM_Businesslink_BusinessProgrammeVisitAPI {
     $this->customGroups['Business_Programme']['fields']['Visit_to'] = civicrm_api3('CustomField', 'getsingle', array('name' => 'Visit_ot', 'custom_group_id' => $this->customGroups['Business_Programme']['id']));
     $this->customGroups['Business_Programme']['fields']['Aim_of_Visit'] = civicrm_api3('CustomField', 'getsingle', array('name' => 'Short_description_Aim_of_Visit', 'custom_group_id' => $this->customGroups['Business_Programme']['id']));
     $this->customGroups['Business_Programme']['fields']['Result_of_Visit'] = civicrm_api3('CustomField', 'getsingle', array('name' => 'Short_description_Result_of_Visit', 'custom_group_id' => $this->customGroups['Business_Programme']['id']));
-    $this->customGroups['Business_Programme']['fields']['Thank_you_Note_sent'] = civicrm_api3('CustomField', 'getsingle', array('name' => 'Thank_you_Note_sent', 'custom_group_id' => $this->customGroups['Business_Programme']['id']));
+    $this->customGroups['Business_Programme']['fields']['Thank_you_Note'] = civicrm_api3('CustomField', 'getsingle', array('name' => 'Thank_you_Note', 'custom_group_id' => $this->customGroups['Business_Programme']['id']));
     $this->customGroups['Business_Programme']['fields']['Naam_bedrijf'] = civicrm_api3('CustomField', 'getsingle', array('name' => 'Naam_bedrijf', 'custom_group_id' => $this->customGroups['Business_Programme']['id']));
     $this->customGroups['Business_Programme']['fields']['Location'] = civicrm_api3('CustomField', 'getsingle', array('name' => 'Location', 'custom_group_id' => $this->customGroups['Business_Programme']['id']));
     $this->customGroups['Business_Programme']['fields']['Name_Company_Contact'] = civicrm_api3('CustomField', 'getsingle', array('name' => 'Name_Company_Contact', 'custom_group_id' => $this->customGroups['Business_Programme']['id']));
@@ -108,7 +108,7 @@ class CRM_Businesslink_BusinessProgrammeVisitAPI {
     $return['visit_to'] = $activity['custom_'.$this->customGroups['Business_Programme']['fields']['Visit_to']['id']];
     $return['result_of_visit'] = $activity['custom_'.$this->customGroups['Business_Programme']['fields']['Result_of_Visit']['id']];
     $return['aim_of_visit'] = $activity['custom_'.$this->customGroups['Business_Programme']['fields']['Aim_of_Visit']['id']];
-    $return['thank_you_send'] = $activity['custom_'.$this->customGroups['Business_Programme']['fields']['Thank_you_Note_sent']['id']];
+    $return['thank_you_send'] = $activity['custom_'.$this->customGroups['Business_Programme']['fields']['Thank_you_Note']['id']];
 
     return $return;
   }
@@ -169,7 +169,7 @@ class CRM_Businesslink_BusinessProgrammeVisitAPI {
     $activityParams['custom_'.$this->customGroups['Business_Programme']['fields']['Visit_from']['id']] = $params['visit_from'];
     $activityParams['custom_'.$this->customGroups['Business_Programme']['fields']['Visit_to']['id']] = $params['visit_to'];
     $activityParams['custom_'.$this->customGroups['Business_Programme']['fields']['Result_of_Visit']['id']] = $params['result_of_visit'];
-    $activityParams['custom_'.$this->customGroups['Business_Programme']['fields']['Thank_you_Note_sent']['id']] = $params['thank_you_send'];
+    $activityParams['custom_'.$this->customGroups['Business_Programme']['fields']['Thank_you_Note']['id']] = $params['thank_you_send'];
     $activityParams['custom_'.$this->customGroups['Business_Programme']['fields']['Naam_bedrijf']['id']] = $params['company_name'];
     $activityParams['custom_'.$this->customGroups['Business_Programme']['fields']['Location']['id']] = $params['company_city'];
     $activityParams['custom_'.$this->customGroups['Business_Programme']['fields']['Name_Company_Contact']['id']] = $params['contact_person_lastname'];
