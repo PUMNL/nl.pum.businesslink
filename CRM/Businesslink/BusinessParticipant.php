@@ -399,6 +399,13 @@ class CRM_Businesslink_BusinessParticipant {
         CRM_Core_DAO::executeQuery($sql, array(
           1 => array($travelCase['id'], 'Integer'),
           2 => array($this->_sourceData['case_id'], 'Integer')));
+        // and copy donor link to travel case
+        if (method_exists('CRM_Travelcase_Utils_AddDonorFromParentCase', 'copyDonorLink')) {
+          CRM_Travelcase_Utils_AddDonorFromParentCase::copyDonorLink($this->_sourceData['case_id'], $travelCase['id']);
+        } else {
+          throw new Exception('Could not find method copyDonorLink from class CRM_Travelcase_Utils_AddDonorFromParentCase in '
+            .__METHOD__.', donor can not be copied to created travel case. Contact your system administrator');
+        }
       } catch (CiviCRM_API3_Exception $ex) {
         throw new Exception('Could not create a travel case for contact id ' . $this->_businessParticipantContactId . ' in '
           . __METHOD__ . ', contact your system administrator. Error from API Case create: ' . $ex->getMessage());
