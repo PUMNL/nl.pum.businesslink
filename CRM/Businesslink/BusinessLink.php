@@ -8,6 +8,7 @@
  * @license AGPL-3.0
  */
 class CRM_Businesslink_BusinessLink {
+
   /**
    * Method to process civicrm hook buildForm
    *
@@ -27,41 +28,9 @@ class CRM_Businesslink_BusinessLink {
           // set defaults for business programme
           self::setDefaultsNewBusinessProgramme($form);
         }
-        // activity type is Approve Expert by Customer
-        if ($formActivityType == 'Approve Expert by Customer') {
-          self::setDefaultsApproveExpertByCustomer($form);
-        }
       }
-    }
-  }
+      // case type is main activity and action is add
 
-  /**
-   * Method to set defaults for approve expert by customer
-   *
-   * @param $form
-   */
-  private static function setDefaultsApproveExpertByCustomer(&$form) {
-    $defaults = array();
-    $caseId = $form->getVar('_caseId');
-    // set default medium to webform if exists
-    try {
-      $defaults['medium_id'] = civicrm_api3('OptionValue', 'getvalue', array(
-        'option_group_id' => 'encounter_medium',
-        'name' => 'webform',
-        'return' => 'value'));
-    } catch (CiviCRM_API3_Exception $ex) {}
-    // set default assignee to authorised contact for case (or case client if role not on case)
-    $authorizedContactId = self::getAuthorisedContactId($form->_relatedContacts, $caseId);
-    if ($authorizedContactId) {
-      $defaults['assignee_contact_id'] = $authorizedContactId;
-    }
-    // set default subject to Approve Expert By Customer for <case_id> - <case_type> - <case subject>
-    try {
-      $caseSubject = civicrm_api3('Case', 'getvalue', array('id' => $caseId, 'return' => 'subject'));
-      $defaults['subject'] = 'Approve Expert By Customer for Main Activity '.$caseSubject;
-    } catch (CiviCRM_API3_Exception $ex) {}
-    if (!empty($defaults)) {
-      $form->setDefaults($defaults);
     }
   }
 
@@ -85,7 +54,7 @@ class CRM_Businesslink_BusinessLink {
     try {
       $authorisedRelationshipTypeId = civicrm_api3('RelationshipType', 'getvalue', array(
         'name_a_b' => 'Has authorised',
-        'name_b_a' => 'Has authorised',
+        'name_b_a' => 'Authorised contact for',
         'return' => 'id'
       ));
       $authorisedContactId = civicrm_api3('Relationship', 'getvalue', array(
