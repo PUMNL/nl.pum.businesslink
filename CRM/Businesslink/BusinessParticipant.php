@@ -331,18 +331,14 @@ class CRM_Businesslink_BusinessParticipant {
       'subject' => $subject,
       'source_contact_id' => $this->_caseCustomerId,
       'target_customer_id' => $contactId,
-      'details' => $details
+      'details' => $details,
+      'case_id' => $this->_sourceData['case_id'],
     );
     if (!empty($this->_caseProjectOfficerId)) {
       $activityParams['assignee_contact_id'] = $this->_caseProjectOfficerId;
     }
     try {
-      $activity = civicrm_api3('Activity', 'create', $activityParams);
-      // link activity to case
-      $sql = "INSERT INTO civicrm_case_activity (case_id, activity_id) VALUES(%1, %2)";
-      CRM_Core_DAO::executeQuery($sql, array(
-        1 => array($this->_sourceData['case_id'], 'Integer'),
-        2 => array($activity['id'], 'Integer')));
+      civicrm_api3('Activity', 'create', $activityParams);
     } catch (CiviCRM_API3_Exception $ex) {
       throw new Exception('Error when creating Data Difference on Registration activity in '.__METHOD__
         .', contact your system administrator. Error from API Activity create: '.$ex->getMessage());
