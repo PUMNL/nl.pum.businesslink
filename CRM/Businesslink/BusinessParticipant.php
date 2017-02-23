@@ -35,6 +35,8 @@ class CRM_Businesslink_BusinessParticipant {
   private $_passportExpiryCustomId = NULL;
   private $_travelParentTableName = NULL;
   private $_travelParentCaseIdColumnName = NULL;
+  private $_infoForDsaTableName = NULL;
+  private $_infoForDsaFillFromLinkedEntityColumnName = NULL;
   private $_nationalityTableName = NULL;
   private $_nationalityCustomId = NULL;
   private $_dataDifferences = array();
@@ -70,6 +72,9 @@ class CRM_Businesslink_BusinessParticipant {
 
     $this->_travelParentTableName = CRM_Businesslink_Utils::getCustomGroupTableName('travel_parent', 'Case');
     $this->_travelParentCaseIdColumnName = CRM_Businesslink_Utils::getCustomFieldField('travel_parent', 'case_id', 'column_name');
+
+    $this->_infoForDsaTableName = CRM_Businesslink_Utils::getCustomGroupTableName('Info_for_DSA', 'Case');
+    $this->_infoForDsaFillFromLinkedEntityColumnName = CRM_Businesslink_Utils::getCustomFieldField('Info_for_DSA', 'fill_from_linked_entity', 'column_name');
 
     $this->_nationalityTableName = CRM_Businesslink_Utils::getCustomGroupTableName('Nationality', 'Individual');
     $this->_nationalityCustomId = CRM_Businesslink_Utils::getCustomFieldField('Nationality', 'Nationality');
@@ -127,7 +132,7 @@ class CRM_Businesslink_BusinessParticipant {
      $relationSql = "SELECT contact_id_b, case_id FROM civicrm_relationship WHERE id = %1";
      $relationship = CRM_Core_DAO::executeQuery($relationSql, array(1 => array($relationshipId, 'Integer')));
      if ($relationship->fetch()) {
-       $travelCaseSql = "SELECT entity_id FROM ".$this->_travelParentTableName." tp LEFT JOIN civicrm_case_contact cc 
+       $travelCaseSql = "SELECT entity_id FROM ".$this->_travelParentTableName." tp LEFT JOIN civicrm_case_contact cc
       ON tp.entity_id = cc.case_id WHERE tp.case_id = %1 AND cc.contact_id = %2";
        $params = array(
          1 => array($relationship->case_id, 'Integer'),
@@ -402,6 +407,12 @@ class CRM_Businesslink_BusinessParticipant {
           throw new Exception('Could not find method copyDonorLink from class CRM_Travelcase_Utils_AddDonorFromParentCase in '
             .__METHOD__.', donor can not be copied to created travel case. Contact your system administrator');
         }
+
+        // Also copy info for DSA from business case
+        $sql = 'INSERT INTO ' . $this->_infoForDsaTableName . ' (entity_id, ' . $this->_infoForDsaFillFromLinkedEntityColumnName. ') VALUES(%1, \'1\')';
+        CRM_Core_DAO::executeQuery($sql, array(1 => array($travelCase['id'], 'Integer')));
+        $ma_info = CRM_Travelcase_Utils_CopyDsaInfo::getMAInfo($this->_sourceData['case_id']);
+        CRM_Travelcase_Utils_CopyDsaInfo::fillFromParentCase($this->_sourceData['case_id'], $travelCase['id'], $ma_info);
       } catch (CiviCRM_API3_Exception $ex) {
         throw new Exception('Could not create a travel case for contact id ' . $this->_businessParticipantContactId . ' in '
           . __METHOD__ . ', contact your system administrator. Error from API Case create: ' . $ex->getMessage());
@@ -417,7 +428,7 @@ class CRM_Businesslink_BusinessParticipant {
    * @return bool
    */
   private function travelCaseExists() {
-    $sql = "SELECT COUNT(*) FROM ".$this->_travelParentTableName." tp LEFT JOIN civicrm_case_contact cc 
+    $sql = "SELECT COUNT(*) FROM ".$this->_travelParentTableName." tp LEFT JOIN civicrm_case_contact cc
       ON tp.entity_id = cc.case_id WHERE tp.case_id = %1 AND cc.contact_id = %2";
     $params = array(
       1 => array($this->_sourceData['case_id'], 'Integer'),
